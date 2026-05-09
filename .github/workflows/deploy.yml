@@ -46,12 +46,40 @@ jobs:
           cp -R frontend/dist/. .deploy/
           cp -R backend/api .deploy/api
           cp -R backend/config .deploy/config
+          cp -R backend/middleware .deploy/middleware
+          cp -R backend/services .deploy/services
           cp -R backend/vendor .deploy/vendor
+          cat > .deploy/.env <<'ENV'
+          APP_ENV=production
+          APP_DEBUG=${{ secrets.APP_DEBUG || 'false' }}
+          APP_URL=https://shalalekka.prabudha.com
+          ALLOWED_ORIGINS=https://shalalekka.prabudha.com
+
+          FIN_DB_HOST=${{ secrets.FIN_DB_HOST || 'localhost' }}
+          FIN_DB_NAME=${{ secrets.FIN_DB_NAME }}
+          FIN_DB_USER=${{ secrets.FIN_DB_USER }}
+          FIN_DB_PASS=${{ secrets.FIN_DB_PASS }}
+
+          ANU_DB1_HOST=${{ secrets.ANU_DB1_HOST || 'localhost' }}
+          ANU_DB1_NAME=${{ secrets.ANU_DB1_NAME }}
+          ANU_DB1_USER=${{ secrets.ANU_DB1_USER }}
+          ANU_DB1_PASS=${{ secrets.ANU_DB1_PASS }}
+
+          ANU_DB2_HOST=${{ secrets.ANU_DB2_HOST || 'localhost' }}
+          ANU_DB2_NAME=${{ secrets.ANU_DB2_NAME }}
+          ANU_DB2_USER=${{ secrets.ANU_DB2_USER }}
+          ANU_DB2_PASS=${{ secrets.ANU_DB2_PASS }}
+
+          CENTRAL_DB_HOST=${{ secrets.CENTRAL_DB_HOST || 'localhost' }}
+          CENTRAL_DB_NAME=${{ secrets.CENTRAL_DB_NAME }}
+          CENTRAL_DB_USER=${{ secrets.CENTRAL_DB_USER }}
+          CENTRAL_DB_PASS=${{ secrets.CENTRAL_DB_PASS }}
+          ENV
           cat > .deploy/.htaccess <<'HTACCESS'
           Options -Indexes
           RewriteEngine On
 
-          RewriteRule ^(config|vendor|scripts)(/|$) - [F,L]
+          RewriteRule ^(config|middleware|services|vendor|scripts)(/|$) - [F,L]
           RewriteRule ^api(?:/.*)?$ api/index.php [QSA,L]
 
           RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -75,6 +103,3 @@ jobs:
           port: ${{ secrets.HOSTINGER_FTP_PORT || 21 }}
           local-dir: .deploy/
           server-dir: ./
-          exclude: |
-            **/.env
-            **/.env.*

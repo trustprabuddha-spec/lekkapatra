@@ -1,10 +1,11 @@
-import type { FeeType, StudentRecord } from './types';
+import type { AuthUser, FeeType, StudentRecord } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8081/api';
 
 async function req<T>(path: string, options: RequestInit = {}, schoolCode = '1'): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'X-School-Code': schoolCode,
@@ -14,9 +15,37 @@ async function req<T>(path: string, options: RequestInit = {}, schoolCode = '1')
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || 'Request failed');
+    let message = '';
+    try {
+      const payload = JSON.parse(text) as { error?: string; message?: string };
+      message = payload.error || payload.message || '';
+    } catch {
+      message = '';
+    }
+    throw new Error(message || text || 'Request failed');
   }
   return (await response.json()) as T;
+}
+
+export async function login(username: string, password: string, schoolCode: string): Promise<AuthUser> {
+  const data = await req<{ user: AuthUser }>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password, school_code: schoolCode })
+  }, schoolCode);
+  return data.user;
+}
+
+export async function fetchCurrentUser(): Promise<AuthUser | null> {
+  try {
+    const data = await req<{ user: AuthUser }>('/auth/me');
+    return data.user;
+  } catch {
+    return null;
+  }
+}
+
+export async function logout(): Promise<void> {
+  await req('/auth/logout', { method: 'POST' });
 }
 
 export async function fetchStudents(schoolCode: string): Promise<StudentRecord[]> {

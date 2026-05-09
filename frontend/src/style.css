@@ -28,6 +28,17 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.header h1 {
+  margin-bottom: 0;
+}
+
+.header-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 180px;
 }
 
 .tabs {
@@ -53,6 +64,12 @@ body {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 12px;
+}
+
+.login-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 20vh;
 }
 
 .grid {

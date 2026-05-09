@@ -21,3 +21,12 @@ export interface FeeType {
   recurrence: 'one_time' | 'monthly' | 'termly' | 'yearly';
   is_active: number;
 }
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  role: string;
+  full_name: string;
+  email: string;
+  school_code: string;
+}

@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
-import { createEmiPlan, createFeeType, fetchFeeTypes, fetchStudents, generateBill, invoicePdfUrl, updateFeeType } from './api';
-import type { FeeType, StudentRecord } from './types';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { createEmiPlan, createFeeType, fetchCurrentUser, fetchFeeTypes, fetchStudents, generateBill, invoicePdfUrl, login, logout, updateFeeType } from './api';
+import type { AuthUser, FeeType, StudentRecord } from './types';
 
 type Screen = 'feeTypes' | 'generateBill' | 'emiPlans' | 'invoice';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('feeTypes');
   const [schoolCode, setSchoolCode] = useState('1');
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [feeTypes, setFeeTypes] = useState<FeeType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -14,10 +16,26 @@ export function App() {
   const [generatedBillId, setGeneratedBillId] = useState<number | null>(null);
 
   useEffect(() => {
-    void loadData();
-  }, [schoolCode]);
+    void restoreSession();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      void loadData();
+    }
+  }, [schoolCode, user]);
+
+  async function restoreSession() {
+    const sessionUser = await fetchCurrentUser();
+    if (sessionUser) {
+      setUser(sessionUser);
+      setSchoolCode(sessionUser.school_code);
+    }
+    setCheckingAuth(false);
+  }
 
   async function loadData() {
+    if (!user) return;
     setLoading(true);
     setError('');
     try {
@@ -31,14 +49,41 @@ export function App() {
     }
   }
 
+  if (checkingAuth) {
+    return <p className="info">Checking session...</p>;
+  }
+
+  if (!user) {
+    return <LoginScreen onLoggedIn={(nextUser) => {
+      setUser(nextUser);
+      setSchoolCode(nextUser.school_code);
+    }} />;
+  }
+
   return (
     <div className="app">
       <header className="header">
-        <h1>Finance</h1>
-        <select value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)}>
-          <option value="1">School 1</option>
-          <option value="2">School 2</option>
-        </select>
+        <div>
+          <h1>Finance</h1>
+          <p className="info">Logged in as {user.full_name || user.username}</p>
+        </div>
+        <div className="header-actions">
+          <select value={schoolCode} disabled onChange={(e) => setSchoolCode(e.target.value)}>
+            <option value="1">School 1</option>
+            <option value="2">School 2</option>
+          </select>
+          <button
+            type="button"
+            onClick={async () => {
+              await logout();
+              setUser(null);
+              setStudents([]);
+              setFeeTypes([]);
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </header>
       <nav className="tabs">
         <button className={screen === 'feeTypes' ? 'active' : ''} onClick={() => setScreen('feeTypes')}>Fee Types</button>
@@ -53,6 +98,42 @@ export function App() {
       {screen === 'emiPlans' && <EmiScreen schoolCode={schoolCode} billId={generatedBillId} />}
       {screen === 'invoice' && <InvoiceScreen billId={generatedBillId} />}
     </div>
+  );
+}
+
+function LoginScreen({ onLoggedIn }: { onLoggedIn: (user: AuthUser) => void }) {
+  const [schoolCode, setSchoolCode] = useState('1');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      const user = await login(username, password, schoolCode);
+      onLoggedIn(user);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form className="card login-card" onSubmit={submit}>
+      <h1>Finance Login</h1>
+      <select value={schoolCode} onChange={(event) => setSchoolCode(event.target.value)}>
+        <option value="1">School 1</option>
+        <option value="2">School 2</option>
+      </select>
+      <input autoComplete="username" placeholder="Username" value={username} onChange={(event) => setUsername(event.target.value)} />
+      <input autoComplete="current-password" placeholder="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+      <button type="submit" disabled={submitting}>{submitting ? 'Logging in...' : 'Login'}</button>
+      {error && <p className="error">{error}</p>}
+    </form>
   );
 }
 

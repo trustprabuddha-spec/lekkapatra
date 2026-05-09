@@ -11,6 +11,14 @@ $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $path = preg_replace('#^/api/?#', '', $path);
 $path = trim((string)$path, '/');
 
+if (preg_match('#^auth/(login|logout|me)$#', $path) === 1) {
+    require __DIR__ . '/finance/auth.php';
+    exit;
+}
+
+require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+AuthMiddleware::requireAuth();
+
 if ($path === 'students') {
     require __DIR__ . '/finance/students.php';
     exit;
