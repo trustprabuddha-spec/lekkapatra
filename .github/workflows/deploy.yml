@@ -1,0 +1,80 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_BASE: /api
+        run: |
+          npm ci
+          npm run build
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: dom, mbstring, pdo_mysql
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p .deploy
+          cp -R frontend/dist/. .deploy/
+          cp -R backend/api .deploy/api
+          cp -R backend/config .deploy/config
+          cp -R backend/vendor .deploy/vendor
+          cat > .deploy/.htaccess <<'HTACCESS'
+          Options -Indexes
+          RewriteEngine On
+
+          RewriteRule ^(config|vendor|scripts)(/|$) - [F,L]
+          RewriteRule ^api(?:/.*)?$ api/index.php [QSA,L]
+
+          RewriteCond %{REQUEST_FILENAME} -f [OR]
+          RewriteCond %{REQUEST_FILENAME} -d
+          RewriteRule ^ - [L]
+
+          RewriteRule ^ index.html [L]
+
+          <FilesMatch "^\.env">
+            Require all denied
+          </FilesMatch>
+          HTACCESS
+
+      - name: Deploy to Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          protocol: ${{ secrets.HOSTINGER_FTP_PROTOCOL || 'ftp' }}
+          port: ${{ secrets.HOSTINGER_FTP_PORT || 21 }}
+          local-dir: .deploy/
+          server-dir: ${{ secrets.HOSTINGER_FTP_PATH || './' }}
+          exclude: |
+            **/.env
+            **/.env.*
