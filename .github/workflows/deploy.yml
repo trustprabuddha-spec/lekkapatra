@@ -42,17 +42,20 @@ jobs:
 
       - name: Prepare deploy directory
         run: |
-          mkdir -p .deploy
+          mkdir -p .deploy/scripts
           cp -R frontend/dist/. .deploy/
           cp -R backend/api .deploy/api
           cp -R backend/config .deploy/config
           cp -R backend/middleware .deploy/middleware
+          cp -R backend/migrations .deploy/migrations
           cp -R backend/services .deploy/services
           cp -R backend/vendor .deploy/vendor
+          cp backend/scripts/migrate-web.php .deploy/scripts/migrate-web.php
           cat > .deploy/.env <<'ENV'
           APP_ENV=production
           APP_DEBUG=${{ secrets.APP_DEBUG || 'false' }}
           APP_URL=https://shalalekka.prabudha.com
+          MIGRATE_SECRET=${{ secrets.MIGRATE_SECRET }}
           ALLOWED_ORIGINS=https://shalalekka.prabudha.com,http://localhost:5177,http://127.0.0.1:5177
 
           FIN_DB_HOST=${{ secrets.FIN_DB_HOST || 'localhost' }}
@@ -91,7 +94,8 @@ jobs:
           Header always set Access-Control-Allow-Headers "Content-Type, X-School-Code" env=FINANCE_ALLOWED_ORIGIN
           Header always set Vary "Origin" env=FINANCE_ALLOWED_ORIGIN
 
-          RewriteRule ^(config|middleware|services|vendor|scripts)(/|$) - [F,L]
+          RewriteRule ^(config|middleware|services|vendor)(/|$) - [F,L]
+          RewriteRule ^scripts/(?!migrate-web\.php) - [F,L]
           RewriteRule ^api(?:/.*)?$ api/index.php [QSA,L]
 
           RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -115,3 +119,17 @@ jobs:
           port: ${{ secrets.HOSTINGER_FTP_PORT || 21 }}
           local-dir: .deploy/
           server-dir: ./
+
+      - name: Run DB migrations
+        run: |
+          curl -sf \
+            -H "X-Migrate-Secret: ${{ secrets.MIGRATE_SECRET }}" \
+            https://shalalekka.prabudha.com/scripts/migrate-web.php \
+            | tee /tmp/migrate-result.json
+          cat /tmp/migrate-result.json | python3 -c "
+          import json,sys
+          r=json.load(sys.stdin)
+          failed=[m for m in r['migrations'] if m['status']=='fail']
+          [print('FAIL:',m['file'],m.get('message','')) for m in failed]
+          sys.exit(1 if failed else 0)
+          "
