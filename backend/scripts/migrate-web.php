@@ -8,16 +8,18 @@
 
 declare(strict_types=1);
 
-$secret = getenv('MIGRATE_SECRET');
+require_once __DIR__ . '/../config/bootstrap.php';
+
+$secret = $_ENV['MIGRATE_SECRET'] ?? '';
 $given  = $_SERVER['HTTP_X_MIGRATE_SECRET'] ?? '';
 
-if (!$secret || !hash_equals($secret, $given)) {
+if ($secret === '' || !hash_equals($secret, $given)) {
     http_response_code(403);
+    header('Content-Type: application/json');
     echo json_encode(['error' => 'Forbidden']);
     exit;
 }
 
-require_once __DIR__ . '/../config/bootstrap.php';
 require_once __DIR__ . '/../config/database.php';
 
 $migrationsDir = __DIR__ . '/../migrations';
