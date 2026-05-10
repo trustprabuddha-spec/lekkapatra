@@ -40,7 +40,7 @@ foreach ($files as $file) {
         $db->exec($sql);
         $results[] = ['file' => $name, 'status' => 'ok'];
     } catch (PDOException $e) {
-        if ($e->getCode() === '42000' && str_contains($e->getMessage(), 'Duplicate column')) {
+        if (str_contains($e->getMessage(), 'Duplicate column') || str_contains($e->getMessage(), 'Column already exists')) {
             $results[] = ['file' => $name, 'status' => 'skip', 'message' => 'Already applied'];
         } else {
             $results[] = ['file' => $name, 'status' => 'fail', 'message' => $e->getMessage()];

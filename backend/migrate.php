@@ -28,7 +28,7 @@ foreach ($files as $file) {
         fwrite(STDOUT, "OK  $name\n");
     } catch (PDOException $e) {
         // 1060 = Duplicate column — migration already applied, safe to skip
-        if ($e->getCode() === '42000' && str_contains($e->getMessage(), 'Duplicate column')) {
+        if (str_contains($e->getMessage(), 'Duplicate column') || str_contains($e->getMessage(), 'Column already exists')) {
             fwrite(STDOUT, "SKIP $name (already applied)\n");
         } else {
             fwrite(STDERR, "FAIL $name: " . $e->getMessage() . "\n");
