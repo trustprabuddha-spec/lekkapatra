@@ -66,9 +66,18 @@ export async function updateFeeType(payload: Partial<FeeType> & { id: number }, 
   await req('/fee-types', { method: 'PUT', body: JSON.stringify(payload) }, schoolCode);
 }
 
-export async function fetchBills(schoolCode: string, limit = 10): Promise<BillRecord[]> {
-  const data = await req<{ data: BillRecord[] }>(`/bills?limit=${limit}`, {}, schoolCode);
-  return data.data;
+export interface BillsPage {
+  data: BillRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export async function fetchBills(schoolCode: string, page = 1, search = '', limit = 10): Promise<BillsPage> {
+  const params = new URLSearchParams({ limit: String(limit), page: String(page) });
+  if (search) params.set('search', search);
+  return req<BillsPage>(`/bills?${params.toString()}`, {}, schoolCode);
 }
 
 export async function generateBill(payload: Record<string, unknown>, schoolCode: string): Promise<{ bill_id: number; bill_no: string }> {

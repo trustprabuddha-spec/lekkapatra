@@ -425,10 +425,24 @@ function GenerateBillScreen({
   const [extraAmount, setExtraAmount] = useState('');
   const [billNo, setBillNo] = useState('');
   const [recentBills, setRecentBills] = useState<BillRecord[]>([]);
+  const [billsPage, setBillsPage] = useState(1);
+  const [billsTotalPages, setBillsTotalPages] = useState(1);
+  const [billsTotal, setBillsTotal] = useState(0);
+  const [billsSearch, setBillsSearch] = useState('');
+  const [billsSearchInput, setBillsSearchInput] = useState('');
 
   useEffect(() => {
-    void fetchBills(schoolCode).then(setRecentBills);
+    void loadBills(1, '');
   }, [schoolCode]);
+
+  async function loadBills(page: number, search: string) {
+    const result = await fetchBills(schoolCode, page, search);
+    setRecentBills(result.data);
+    setBillsPage(result.page);
+    setBillsTotalPages(result.total_pages);
+    setBillsTotal(result.total);
+    setBillsSearch(search);
+  }
 
   const selectedStudent = useMemo(
     () => students.find((student) => `${student.source}:${student.source_student_id}` === selectedKey) || null,
@@ -472,7 +486,7 @@ function GenerateBillScreen({
     }, schoolCode);
     setBillNo(res.bill_no);
     onCreated(res.bill_id);
-    void fetchBills(schoolCode).then(setRecentBills);
+    void loadBills(1, billsSearch);
   }
 
   return (
@@ -585,9 +599,46 @@ function GenerateBillScreen({
 
       <aside className="stack">
         <section className="card activity-card">
-          <CardTitle icon="history" title="Recent Bills" compact />
+          <div className="bills-header">
+            <CardTitle icon="history" title="Bills" compact />
+            {billsTotal > 0 && <span className="bills-total-badge">{billsTotal}</span>}
+          </div>
+
+          <form
+            className="bills-search-form"
+            onSubmit={(e) => { e.preventDefault(); void loadBills(1, billsSearchInput); }}
+          >
+            <div className="search-box">
+              <span className="material-symbols-outlined">search</span>
+              <input
+                placeholder="Name or bill no…"
+                value={billsSearchInput}
+                onChange={(e) => {
+                  setBillsSearchInput(e.target.value);
+                  if (e.target.value === '') void loadBills(1, '');
+                }}
+              />
+              {billsSearchInput && (
+                <button
+                  type="button"
+                  className="search-clear"
+                  aria-label="Clear"
+                  onClick={() => { setBillsSearchInput(''); void loadBills(1, ''); }}
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              )}
+            </div>
+          </form>
+
+          {billsSearch && (
+            <p className="search-result-count">
+              {billsTotal === 0 ? 'No results' : `${billsTotal} result${billsTotal !== 1 ? 's' : ''} for "${billsSearch}"`}
+            </p>
+          )}
+
           {recentBills.length === 0 ? (
-            <p className="muted">No bills yet. Create one to see it here.</p>
+            <p className="muted">{billsSearch ? 'No bills match your search.' : 'No bills yet. Create one to see it here.'}</p>
           ) : (
             <div className="activity-list">
               {recentBills.map((bill) => (
@@ -602,6 +653,30 @@ function GenerateBillScreen({
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {billsTotalPages > 1 && (
+            <div className="bills-pagination">
+              <button
+                type="button"
+                className="page-btn"
+                disabled={billsPage <= 1}
+                onClick={() => void loadBills(billsPage - 1, billsSearch)}
+                aria-label="Previous page"
+              >
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+              <span className="page-indicator">{billsPage} / {billsTotalPages}</span>
+              <button
+                type="button"
+                className="page-btn"
+                disabled={billsPage >= billsTotalPages}
+                onClick={() => void loadBills(billsPage + 1, billsSearch)}
+                aria-label="Next page"
+              >
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
             </div>
           )}
         </section>

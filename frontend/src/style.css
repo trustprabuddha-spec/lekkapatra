@@ -893,6 +893,76 @@ tbody tr:hover {
   margin-bottom: var(--space-sm);
 }
 
+.bills-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.bills-total-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--surface-variant);
+  color: var(--on-surface-variant);
+}
+
+.bills-search-form {
+  margin-bottom: 8px;
+}
+
+.bills-search-form .search-box {
+  width: 100%;
+}
+
+.bills-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 10px;
+  margin-top: 4px;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--surface-variant);
+  border-color: var(--accent);
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.page-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.page-indicator {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  min-width: 48px;
+  text-align: center;
+}
+
 .activity-list {
   display: flex;
   flex-direction: column;
