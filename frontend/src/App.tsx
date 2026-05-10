@@ -643,13 +643,21 @@ function GenerateBillScreen({
             <div className="activity-list">
               {recentBills.map((bill) => (
                 <div key={bill.id} className={`activity-row${bill.bill_no === billNo ? ' activity-row--new' : ''}`}>
-                  <div>
+                  <div className="activity-row-info">
                     <strong>{bill.bill_no}</strong>
                     <span>{bill.student_name}</span>
                   </div>
                   <div className="activity-row-right">
                     <strong>{formatCurrency(bill.total_amount)}</strong>
                     <span className={`status-chip status-chip--${bill.status}`}>{bill.status}</span>
+                    <a
+                      className="bill-pdf-link"
+                      href={invoicePdfUrl(bill.id)}
+                      title={`Download PDF for ${bill.bill_no}`}
+                      aria-label={`Download PDF for ${bill.bill_no}`}
+                    >
+                      <span className="material-symbols-outlined">download</span>
+                    </a>
                   </div>
                 </div>
               ))}
