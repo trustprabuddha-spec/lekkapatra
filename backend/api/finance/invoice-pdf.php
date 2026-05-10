@@ -27,8 +27,4 @@ $stmt = $db->prepare('SELECT * FROM bill_items WHERE bill_id = ? ORDER BY id ASC
 $stmt->execute([$billId]);
 $items = $stmt->fetchAll();
 
-$stmt = $db->prepare('SELECT * FROM emi_plans WHERE bill_id = ? ORDER BY installment_no ASC');
-$stmt->execute([$billId]);
-$emi = $stmt->fetchAll();
-
-InvoicePdfService::stream($bill, $items, $emi);
+InvoicePdfService::stream($bill, $items);

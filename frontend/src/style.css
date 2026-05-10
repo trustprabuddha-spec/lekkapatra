@@ -671,6 +671,24 @@ a {
   width: min(260px, 100%);
 }
 
+.student-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.student-search-field > span {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.student-search-field .search-box {
+  width: 100%;
+}
+
 .search-box .material-symbols-outlined {
   position: absolute;
   top: 50%;

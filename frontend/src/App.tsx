@@ -145,16 +145,6 @@ export function App() {
           ))}
         </nav>
 
-        <div className="side-footer">
-          <button type="button">
-            <span className="material-symbols-outlined">settings</span>
-            <span>Settings</span>
-          </button>
-          <button type="button">
-            <span className="material-symbols-outlined">contact_support</span>
-            <span>Support</span>
-          </button>
-        </div>
       </aside>
 
       <div className="main-shell">
@@ -171,12 +161,6 @@ export function App() {
                 <option value="2">School 2</option>
               </select>
             </label>
-            <button type="button" className="icon-button" aria-label="Notifications">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button type="button" className="icon-button" aria-label="Account">
-              <span className="material-symbols-outlined">account_circle</span>
-            </button>
             <button type="button" className="logout-button" onClick={handleLogout}>
               <span className="material-symbols-outlined">logout</span>
               <span>Logout</span>
@@ -215,10 +199,6 @@ export function App() {
           {screen === 'invoice' && <InvoiceScreen billId={generatedBillId} onGenerateBill={() => setScreen('generateBill')} />}
         </main>
 
-        <footer className="app-footer">
-          <span>© 2024 EduFinance Admin</span>
-          <span>System Health: <strong>Operational</strong></span>
-        </footer>
       </div>
     </div>
   );
@@ -366,15 +346,11 @@ function FeeTypesScreen({ schoolCode, feeTypes, onChanged }: { schoolCode: strin
       <section className="card table-card full-span">
         <div className="table-toolbar">
           <CardTitle icon="list_alt" title="Existing Fee Types" compact />
-          <div className="toolbar-actions">
+            <div className="toolbar-actions">
             <div className="search-box">
               <span className="material-symbols-outlined">search</span>
               <input aria-label="Search fees" placeholder="Search fees..." />
             </div>
-            <button className="secondary-action" type="button">
-              <span className="material-symbols-outlined">filter_list</span>
-              Filter
-            </button>
           </div>
         </div>
         <div className="table-wrap">
@@ -441,6 +417,9 @@ function GenerateBillScreen({
   onCreated: (billId: number) => void;
 }) {
   const [selectedKey, setSelectedKey] = useState('');
+  const [enrolledKey, setEnrolledKey] = useState('');
+  const [admissionsKey, setAdmissionsKey] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [selectedFeeType, setSelectedFeeType] = useState('');
   const [extraAmount, setExtraAmount] = useState('');
@@ -452,6 +431,28 @@ function GenerateBillScreen({
   );
   const pickedFeeType = feeTypes.find((feeType) => String(feeType.id) === selectedFeeType) || null;
   const activeFeeTypes = feeTypes.filter((feeType) => feeType.is_active);
+
+  const searchLower = studentSearch.toLowerCase();
+  const enrolledStudents = useMemo(
+    () => students.filter((s) => s.source === 'anubhava' && (searchLower === '' || s.student_name.toLowerCase().includes(searchLower))),
+    [students, searchLower]
+  );
+  const admissionStudents = useMemo(
+    () => students.filter((s) => s.source === 'central' && (searchLower === '' || s.student_name.toLowerCase().includes(searchLower))),
+    [students, searchLower]
+  );
+
+  function handleEnrolledChange(value: string) {
+    setEnrolledKey(value);
+    setAdmissionsKey('');
+    setSelectedKey(value);
+  }
+
+  function handleAdmissionsChange(value: string) {
+    setAdmissionsKey(value);
+    setEnrolledKey('');
+    setSelectedKey(value);
+  }
 
   async function createBill(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -476,13 +477,36 @@ function GenerateBillScreen({
           <span className="pill">New Invoice</span>
         </div>
         <form className="form-grid" onSubmit={createBill}>
+          <div className="field student-search-field">
+            <span>Search Students</span>
+            <div className="search-box">
+              <span className="material-symbols-outlined">search</span>
+              <input
+                aria-label="Search students"
+                placeholder="Type a name to filter..."
+                value={studentSearch}
+                onChange={(event) => setStudentSearch(event.target.value)}
+              />
+            </div>
+          </div>
           <label className="field">
-            <span>Select Student</span>
-            <select required value={selectedKey} onChange={(event) => setSelectedKey(event.target.value)}>
-              <option value="">Choose student...</option>
-              {students.map((student) => (
+            <span>Active Enrolled Students</span>
+            <select value={enrolledKey} onChange={(event) => handleEnrolledChange(event.target.value)}>
+              <option value="">Choose enrolled student...</option>
+              {enrolledStudents.map((student) => (
                 <option key={`${student.source}-${student.source_student_id}`} value={`${student.source}:${student.source_student_id}`}>
-                  {student.student_name} ({student.class_name || student.source}, {student.lifecycle_status})
+                  {student.student_name} ({student.class_name || '—'}, {student.lifecycle_status})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Admissions Portal Students</span>
+            <select value={admissionsKey} onChange={(event) => handleAdmissionsChange(event.target.value)}>
+              <option value="">Choose admissions student...</option>
+              {admissionStudents.map((student) => (
+                <option key={`${student.source}-${student.source_student_id}`} value={`${student.source}:${student.source_student_id}`}>
+                  {student.student_name} ({student.class_name || '—'}, {student.lifecycle_status})
                 </option>
               ))}
             </select>
@@ -511,15 +535,6 @@ function GenerateBillScreen({
       </section>
 
       <aside className="stack">
-        <section className="metric-card charcoal">
-          <span className="material-symbols-outlined watermark">analytics</span>
-          <p>Total Bills Ready</p>
-          <h2>{students.length}</h2>
-          <span className="metric-note">
-            <span className="material-symbols-outlined">verified_user</span>
-            {activeFeeTypes.length} active fee types
-          </span>
-        </section>
         <section className="card activity-card">
           <CardTitle icon="history" title="Recent Bills" compact />
           {billNo ? (
@@ -604,19 +619,6 @@ function EmiScreen({ schoolCode, billId }: { schoolCode: string; billId: number 
         {saved && <p className="status success">EMI plan saved for bill #{billId}.</p>}
       </section>
 
-      <section className="card feature-panel two-span">
-        <div className="feature-visual">
-          <span className="material-symbols-outlined">payments</span>
-        </div>
-        <div>
-          <h3>Plan Overview</h3>
-          <p>EMI plans help parents manage large fee payments through smaller recurring installments.</p>
-        </div>
-      </section>
-      <section className="tip-card">
-        <CardTitle icon="lightbulb" title="Best Practice" compact />
-        <p>Set the first installment date at least 3 days from today to allow bank processing time.</p>
-      </section>
     </div>
   );
 }
@@ -626,28 +628,10 @@ function InvoiceScreen({ billId, onGenerateBill }: { billId: number | null; onGe
 
   return (
     <div className="screen-grid invoice-grid">
-      <aside className="stack quick-steps">
-        <section className="card">
-          <h3>Quick Steps</h3>
-          <StepItem icon="person_search" label="Select Student" />
-          <StepItem icon="list_alt" label="Fee Particulars" />
-          <StepItem icon="description" label="Generate PDF" active={Boolean(billId)} />
-        </section>
-        <section className="tip-card">
-          <CardTitle icon="help_outline" title="Help Desk" compact />
-          <p>Need help generating custom invoice templates?</p>
-          <button className="secondary-action" type="button">Contact Support</button>
-        </section>
-      </aside>
-
       <section className="card invoice-preview">
         <div className="table-toolbar">
           <CardTitle icon="picture_as_pdf" title="Invoice PDF Preview" compact />
           <div className="toolbar-actions">
-            <button className="secondary-action" type="button" disabled={!billId}>
-              <span className="material-symbols-outlined">print</span>
-              Print
-            </button>
             {billId ? (
               <a className="primary-action small" href={pdfUrl}>
                 <span className="material-symbols-outlined">download</span>
@@ -689,27 +673,6 @@ function InvoiceScreen({ billId, onGenerateBill }: { billId: number | null; onGe
         </div>
       </section>
 
-      <section className="card stat-tile">
-        <span className="material-symbols-outlined">history</span>
-        <div>
-          <p>Last Generated</p>
-          <strong>{billId ? `Bill #${billId}` : 'Not available'}</strong>
-        </div>
-      </section>
-      <section className="card stat-tile">
-        <span className="material-symbols-outlined">group</span>
-        <div>
-          <p>Pending Bills</p>
-          <strong>Awaiting selection</strong>
-        </div>
-      </section>
-      <section className="card stat-tile">
-        <span className="material-symbols-outlined">auto_graph</span>
-        <div>
-          <p>Collection Rate</p>
-          <strong>Tracked in reports</strong>
-        </div>
-      </section>
     </div>
   );
 }
@@ -729,16 +692,6 @@ function StatusBadge({ active }: { active: boolean }) {
       <i />
       {active ? 'Active' : 'Inactive'}
     </span>
-  );
-}
-
-function StepItem({ icon, label, active = false }: { icon: string; label: string; active?: boolean }) {
-  return (
-    <div className={active ? 'step-item active' : 'step-item'}>
-      <span className="material-symbols-outlined">{icon}</span>
-      <span>{label}</span>
-      <span className="material-symbols-outlined">arrow_forward</span>
-    </div>
   );
 }
 
