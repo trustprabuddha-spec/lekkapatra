@@ -26,6 +26,19 @@ function financeSchoolCode(): string
 
 function financeAllowCors(): void
 {
+    $corsByApache = $_SERVER['FINANCE_CORS_BY_APACHE']
+        ?? $_SERVER['REDIRECT_FINANCE_CORS_BY_APACHE']
+        ?? getenv('FINANCE_CORS_BY_APACHE')
+        ?: '';
+
+    if ($corsByApache === '1') {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
+        return;
+    }
+
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
     $allowed = array_filter(array_map('trim', explode(',', (string)($_ENV['ALLOWED_ORIGINS'] ?? ''))));
     if ($origin && in_array($origin, $allowed, true)) {
@@ -34,6 +47,7 @@ function financeAllowCors(): void
     }
     header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, X-School-Code');
+    header('Vary: Origin');
 
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
         http_response_code(204);

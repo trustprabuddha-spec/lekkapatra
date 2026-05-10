@@ -53,7 +53,7 @@ jobs:
           APP_ENV=production
           APP_DEBUG=${{ secrets.APP_DEBUG || 'false' }}
           APP_URL=https://shalalekka.prabudha.com
-          ALLOWED_ORIGINS=https://shalalekka.prabudha.com
+          ALLOWED_ORIGINS=https://shalalekka.prabudha.com,http://localhost:5177,http://127.0.0.1:5177
 
           FIN_DB_HOST=${{ secrets.FIN_DB_HOST || 'localhost' }}
           FIN_DB_NAME=${{ secrets.FIN_DB_NAME }}
@@ -78,6 +78,18 @@ jobs:
           cat > .deploy/.htaccess <<'HTACCESS'
           Options -Indexes
           RewriteEngine On
+
+          SetEnv FINANCE_CORS_BY_APACHE 1
+
+          SetEnvIfNoCase Origin "^https://shalalekka\.prabudha\.com$" FINANCE_ALLOWED_ORIGIN=$0
+          SetEnvIfNoCase Origin "^http://localhost:5177$" FINANCE_ALLOWED_ORIGIN=$0
+          SetEnvIfNoCase Origin "^http://127\.0\.0\.1:5177$" FINANCE_ALLOWED_ORIGIN=$0
+
+          Header always set Access-Control-Allow-Origin "%{FINANCE_ALLOWED_ORIGIN}e" env=FINANCE_ALLOWED_ORIGIN
+          Header always set Access-Control-Allow-Credentials "true" env=FINANCE_ALLOWED_ORIGIN
+          Header always set Access-Control-Allow-Methods "GET,POST,PUT,OPTIONS" env=FINANCE_ALLOWED_ORIGIN
+          Header always set Access-Control-Allow-Headers "Content-Type, X-School-Code" env=FINANCE_ALLOWED_ORIGIN
+          Header always set Vary "Origin" env=FINANCE_ALLOWED_ORIGIN
 
           RewriteRule ^(config|middleware|services|vendor|scripts)(/|$) - [F,L]
           RewriteRule ^api(?:/.*)?$ api/index.php [QSA,L]

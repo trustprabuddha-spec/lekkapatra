@@ -13,9 +13,12 @@ final class AuthMiddleware
             return;
         }
 
+        $isProduction = ($_ENV['APP_ENV'] ?? 'production') === 'production';
+        $isCrossSiteRequest = self::isCrossSiteRequest();
+
         ini_set('session.cookie_httponly', '1');
-        ini_set('session.cookie_samesite', 'Lax');
-        if (($_ENV['APP_ENV'] ?? 'production') === 'production') {
+        ini_set('session.cookie_samesite', $isCrossSiteRequest ? 'None' : 'Lax');
+        if ($isProduction || $isCrossSiteRequest) {
             ini_set('session.cookie_secure', '1');
         }
         session_name('lekka_finance_session');
@@ -101,6 +104,20 @@ final class AuthMiddleware
         } catch (Throwable $e) {
             return false;
         }
+    }
+
+    private static function isCrossSiteRequest(): bool
+    {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        if ($origin === '') {
+            return false;
+        }
+
+        $originHost = parse_url($origin, PHP_URL_HOST);
+        $requestHost = $_SERVER['HTTP_HOST'] ?? '';
+        $requestHost = explode(':', $requestHost)[0];
+
+        return $originHost !== null && strcasecmp($originHost, $requestHost) !== 0;
     }
 
     private static function publicUser(array $user, string $schoolCode): array
