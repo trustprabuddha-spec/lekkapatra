@@ -119,10 +119,13 @@ final class InvoicePdfService
       </tr>
     </table>
 
-    <!-- Note -->
+    <!-- Payment guidance -->
     <div style="background: #fdf5ec; border-left: 4px solid #c8813a; padding: 12px 16px; margin-bottom: 40px; border-radius: 2px;">
-      <p style="margin: 0; font-size: 11px; color: #7a3e00; font-weight: bold;">Payment Note</p>
-      <p style="margin: 4px 0 0 0; font-size: 11px; color: #666;">Please present this invoice at the school office when making payment. Keep a copy for your records.</p>
+      <p style="margin: 0; font-size: 11px; color: #7a3e00; font-weight: bold;">Payment Information</p>
+      <p style="margin: 6px 0 0 0; font-size: 11px; color: #666;">Please include the invoice number in all payment communications.</p>
+      <p style="margin: 4px 0 0 0; font-size: 11px; color: #666;">Payment is due on or before the due date mentioned above.</p>
+      <p style="margin: 4px 0 0 0; font-size: 11px; color: #666;">For fee clarification, contact the accounts office during working hours.</p>
+      <p style="margin: 4px 0 0 0; font-size: 11px; color: #666;">This is a system-generated invoice and does not require a signature.</p>
     </div>
 
     <!-- Footer -->
