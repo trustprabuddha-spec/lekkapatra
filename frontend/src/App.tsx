@@ -126,7 +126,7 @@ export function App() {
             <span className="material-symbols-outlined">school</span>
           </div>
           <div>
-            <h1>Acme Academy</h1>
+            <h1>Prabuddha Pratishtana</h1>
             <p>Financial Management</p>
           </div>
         </div>
