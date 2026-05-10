@@ -481,6 +481,7 @@ function GenerateBillScreen({
       student_source: selectedStudent.source,
       source_student_id: selectedStudent.source_student_id,
       student_name: selectedStudent.student_name,
+      parent_name: selectedStudent.parent_name || '',
       due_date: dueDate,
       items: [{ fee_type_id: pickedFeeType.id, description: pickedFeeType.name, quantity: 1, amount }]
     }, schoolCode);

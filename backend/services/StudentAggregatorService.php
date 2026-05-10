@@ -29,14 +29,22 @@ final class StudentAggregatorService
     private static function anubhavaStudents(string $schoolCode): array
     {
         $db = FinanceDatabase::anubhava($schoolCode);
-        $stmt = $db->query("SELECT id, full_name, parent_contact, parent_email, class_name, section FROM students WHERE is_active = 1 ORDER BY full_name");
+        $stmt = $db->query(
+            "SELECT s.id, s.full_name, s.parent_contact, s.parent_email, s.class_name, s.section,
+                    u.full_name AS parent_name
+             FROM students s
+             LEFT JOIN parent_students ps ON ps.student_id = s.id AND ps.is_primary = 1
+             LEFT JOIN users u ON u.id = ps.parent_id AND u.role = 'parent'
+             WHERE s.is_active = 1
+             ORDER BY s.full_name"
+        );
         $rows = $stmt->fetchAll();
 
         return array_map(static fn(array $row): array => [
             'source' => 'anubhava',
             'source_student_id' => (int)$row['id'],
             'student_name' => (string)$row['full_name'],
-            'parent_name' => null,
+            'parent_name' => isset($row['parent_name']) && $row['parent_name'] !== '' ? (string)$row['parent_name'] : null,
             'parent_phone' => (string)($row['parent_contact'] ?? ''),
             'parent_email' => (string)($row['parent_email'] ?? ''),
             'class_name' => (string)($row['class_name'] ?? ''),

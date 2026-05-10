@@ -30,6 +30,8 @@ final class InvoicePdfService
         $total = number_format((float)$bill['total_amount'], 2);
         $billNo = htmlspecialchars((string)$bill['bill_no']);
         $studentName = htmlspecialchars((string)$bill['student_name']);
+        $parentName = !empty($bill['parent_name']) ? htmlspecialchars((string)$bill['parent_name']) : null;
+        $billedTo = $parentName ?? $studentName;
         $dueDate = htmlspecialchars((string)$bill['due_date']);
         $issueDate = date('d M Y');
 
@@ -73,7 +75,8 @@ final class InvoicePdfService
       <tr>
         <td width="55%" style="vertical-align: top;">
           <p style="margin: 0 0 4px 0; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #999;">Billed To</p>
-          <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2c2c2c;">' . $studentName . '</p>
+          <p style="margin: 0 0 4px 0; font-size: 15px; font-weight: bold; color: #2c2c2c;">' . $billedTo . '</p>
+          ' . ($parentName ? '<p style="margin: 0 0 4px 0; font-size: 11px; color: #555;">Student: <strong>' . $studentName . '</strong></p>' : '') . '
           <p style="margin: 0; font-size: 11px; color: #888;">Prabudha School, Karnataka</p>
         </td>
         <td width="45%" align="right" style="vertical-align: top;">

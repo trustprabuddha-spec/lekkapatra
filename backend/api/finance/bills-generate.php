@@ -27,14 +27,17 @@ foreach ($input['items'] as $item) {
     $total += (float)($item['amount'] ?? 0);
 }
 
+$parentName = isset($input['parent_name']) && $input['parent_name'] !== '' ? trim((string)$input['parent_name']) : null;
+
 $db->beginTransaction();
 try {
-    $stmt = $db->prepare('INSERT INTO bills (school_code, student_source, source_student_id, student_name, bill_no, due_date, total_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt = $db->prepare('INSERT INTO bills (school_code, student_source, source_student_id, student_name, parent_name, bill_no, due_date, total_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([
         $schoolCode,
         trim((string)$input['student_source']),
         (int)$input['source_student_id'],
         trim((string)$input['student_name']),
+        $parentName,
         $billNo,
         trim((string)$input['due_date']),
         $total,
