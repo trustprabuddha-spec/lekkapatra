@@ -122,14 +122,22 @@ jobs:
 
       - name: Run DB migrations
         run: |
-          curl -sf \
+          echo "--- Calling migration endpoint ---"
+          HTTP_CODE=$(curl -s -o /tmp/migrate-result.json -w "%{http_code}" \
             -H "X-Migrate-Secret: ${{ secrets.MIGRATE_SECRET }}" \
-            https://shalalekka.prabudha.com/scripts/migrate-web.php \
-            | tee /tmp/migrate-result.json
-          cat /tmp/migrate-result.json | python3 -c "
+            https://shalalekka.prabudha.com/scripts/migrate-web.php)
+          echo "HTTP status: $HTTP_CODE"
+          echo "Response body:"
+          cat /tmp/migrate-result.json
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Migration endpoint returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+          python3 -c "
           import json,sys
-          r=json.load(sys.stdin)
+          r=json.load(open('/tmp/migrate-result.json'))
+          for m in r['migrations']:
+              print(m['status'].upper(), m['file'], m.get('message',''))
           failed=[m for m in r['migrations'] if m['status']=='fail']
-          [print('FAIL:',m['file'],m.get('message','')) for m in failed]
           sys.exit(1 if failed else 0)
           "
