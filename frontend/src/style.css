@@ -689,6 +689,53 @@ a {
   width: 100%;
 }
 
+.search-result-count {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-result-count::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.search-clear:hover {
+  color: var(--on-surface);
+  background: var(--surface-variant);
+}
+
+.search-clear .material-symbols-outlined {
+  font-size: 16px;
+  position: static;
+  transform: none;
+}
+
 .search-box .material-symbols-outlined {
   position: absolute;
   top: 50%;

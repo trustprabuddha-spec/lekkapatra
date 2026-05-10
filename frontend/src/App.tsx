@@ -487,7 +487,24 @@ function GenerateBillScreen({
                 value={studentSearch}
                 onChange={(event) => setStudentSearch(event.target.value)}
               />
+              {studentSearch && (
+                <button
+                  type="button"
+                  className="search-clear"
+                  aria-label="Clear search"
+                  onClick={() => setStudentSearch('')}
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              )}
             </div>
+            {studentSearch && (
+              <p className="search-result-count">
+                {enrolledStudents.length + admissionStudents.length === 0
+                  ? 'No students match'
+                  : `${enrolledStudents.length + admissionStudents.length} student${enrolledStudents.length + admissionStudents.length === 1 ? '' : 's'} found`}
+              </p>
+            )}
           </div>
           <label className="field">
             <span>Active Enrolled Students</span>
