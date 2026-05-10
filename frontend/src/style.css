@@ -1062,6 +1062,45 @@ tbody tr:hover {
   font-size: 14px;
 }
 
+.bill-items-field {
+  grid-column: 1 / -1;
+}
+
+.bill-items-list {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  background: var(--surface-low);
+}
+
+.bill-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--outline-variant);
+}
+
+.bill-item-row strong {
+  display: block;
+}
+
+.bill-item-row p {
+  margin: 4px 0 0;
+  color: var(--on-surface-variant);
+}
+
+.bill-item-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+  font-weight: 800;
+}
+
 .feature-panel {
   display: flex;
   align-items: center;

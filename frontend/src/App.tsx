@@ -416,13 +416,22 @@ function GenerateBillScreen({
   schoolCode: string;
   onCreated: (billId: number) => void;
 }) {
+  type DraftBillItem = {
+    fee_type_id: number;
+    description: string;
+    quantity: number;
+    amount: number;
+  };
+
   const [selectedKey, setSelectedKey] = useState('');
   const [enrolledKey, setEnrolledKey] = useState('');
   const [admissionsKey, setAdmissionsKey] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [selectedFeeType, setSelectedFeeType] = useState('');
-  const [extraAmount, setExtraAmount] = useState('');
+  const [selectedFeeTypeId, setSelectedFeeTypeId] = useState('');
+  const [draftAmount, setDraftAmount] = useState('');
+  const [billItems, setBillItems] = useState<DraftBillItem[]>([]);
+  const [formError, setFormError] = useState('');
   const [billNo, setBillNo] = useState('');
   const [recentBills, setRecentBills] = useState<BillRecord[]>([]);
   const [billsPage, setBillsPage] = useState(1);
@@ -448,8 +457,9 @@ function GenerateBillScreen({
     () => students.find((student) => `${student.source}:${student.source_student_id}` === selectedKey) || null,
     [students, selectedKey]
   );
-  const pickedFeeType = feeTypes.find((feeType) => String(feeType.id) === selectedFeeType) || null;
+  const pickedFeeType = feeTypes.find((feeType) => String(feeType.id) === selectedFeeTypeId) || null;
   const activeFeeTypes = feeTypes.filter((feeType) => feeType.is_active);
+  const invoiceTotal = billItems.reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
   const searchLower = studentSearch.toLowerCase();
   const enrolledStudents = useMemo(
@@ -473,19 +483,53 @@ function GenerateBillScreen({
     setSelectedKey(value);
   }
 
+  function addBillItem() {
+    if (!pickedFeeType) {
+      setFormError('Select a fee type to add.');
+      return;
+    }
+
+    const amount = draftAmount === '' ? Number(pickedFeeType.default_amount) : Number(draftAmount);
+    if (!Number.isFinite(amount) || amount < 0) {
+      setFormError('Enter a valid amount for the selected fee type.');
+      return;
+    }
+
+    setBillItems((prev) => [
+      ...prev,
+      {
+        fee_type_id: pickedFeeType.id,
+        description: pickedFeeType.name,
+        quantity: 1,
+        amount
+      }
+    ]);
+    setSelectedFeeTypeId('');
+    setDraftAmount('');
+    setFormError('');
+  }
+
   async function createBill(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedStudent || !pickedFeeType || !dueDate) return;
-    const amount = extraAmount ? Number(extraAmount) : Number(pickedFeeType.default_amount);
+    if (!selectedStudent || !dueDate) {
+      setFormError('Select a student and due date.');
+      return;
+    }
+    if (billItems.length === 0) {
+      setFormError('Add at least one fee type to generate the bill.');
+      return;
+    }
     const res = await generateBill({
       student_source: selectedStudent.source,
       source_student_id: selectedStudent.source_student_id,
       student_name: selectedStudent.student_name,
       parent_name: selectedStudent.parent_name || '',
       due_date: dueDate,
-      items: [{ fee_type_id: pickedFeeType.id, description: pickedFeeType.name, quantity: 1, amount }]
+      items: billItems
     }, schoolCode);
     setBillNo(res.bill_no);
+    setBillItems([]);
+    setFormError('');
     onCreated(res.bill_id);
     void loadBills(1, billsSearch);
   }
@@ -581,20 +625,53 @@ function GenerateBillScreen({
           </label>
           <label className="field">
             <span>Select Fee Type</span>
-            <select required value={selectedFeeType} onChange={(event) => setSelectedFeeType(event.target.value)}>
+            <select value={selectedFeeTypeId} onChange={(event) => setSelectedFeeTypeId(event.target.value)}>
               <option value="">Choose category...</option>
               {activeFeeTypes.map((feeType) => <option key={feeType.id} value={feeType.id}>{feeType.name}</option>)}
             </select>
           </label>
           <label className="field">
-            <span>Custom Amount (optional)</span>
-            <input min="0" type="number" placeholder={pickedFeeType ? String(pickedFeeType.default_amount) : 'Enter amount...'} value={extraAmount} onChange={(event) => setExtraAmount(event.target.value)} />
+            <span>Amount (optional override)</span>
+            <input min="0" type="number" placeholder={pickedFeeType ? String(pickedFeeType.default_amount) : 'Uses default'} value={draftAmount} onChange={(event) => setDraftAmount(event.target.value)} />
           </label>
+          <button className="secondary-action wide" type="button" onClick={addBillItem}>
+            <span className="material-symbols-outlined">playlist_add</span>
+            Add Fee Line Item
+          </button>
+          <div className="field bill-items-field">
+            <span>Bill Line Items</span>
+            {billItems.length === 0 ? (
+              <p className="muted">No fee items added yet.</p>
+            ) : (
+              <div className="bill-items-list">
+                {billItems.map((item, index) => (
+                  <div key={`${item.fee_type_id}-${index}`} className="bill-item-row">
+                    <div>
+                      <strong>{item.description}</strong>
+                      <p>{formatCurrency(item.amount)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-action"
+                      onClick={() => setBillItems((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <div className="bill-item-total">
+                  <span>Total</span>
+                  <strong>{formatCurrency(invoiceTotal)}</strong>
+                </div>
+              </div>
+            )}
+          </div>
           <button className="primary-action wide" type="submit">
             <span className="material-symbols-outlined">add_card</span>
             Create Bill
           </button>
         </form>
+        {formError && <p className="status error">{formError}</p>}
         {billNo && <p className="status success">Bill created: {billNo}</p>}
       </section>
 
