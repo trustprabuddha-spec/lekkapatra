@@ -27,6 +27,10 @@ if ($path === 'fee-types') {
     require __DIR__ . '/finance/fee-types.php';
     exit;
 }
+if ($path === 'bills') {
+    require __DIR__ . '/finance/bills-list.php';
+    exit;
+}
 if ($path === 'bills/generate') {
     require __DIR__ . '/finance/bills-generate.php';
     exit;

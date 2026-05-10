@@ -22,6 +22,16 @@ export interface FeeType {
   is_active: number;
 }
 
+export interface BillRecord {
+  id: number;
+  bill_no: string;
+  student_name: string;
+  total_amount: number;
+  due_date: string;
+  status: string;
+  created_at: string;
+}
+
 export interface AuthUser {
   id: number;
   username: string;

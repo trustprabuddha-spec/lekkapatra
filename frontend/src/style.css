@@ -893,11 +893,62 @@ tbody tr:hover {
   margin-bottom: var(--space-sm);
 }
 
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
 .activity-row {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: var(--space-md);
-  padding-top: var(--space-sm);
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.activity-row:hover {
+  background: var(--surface-variant);
+}
+
+.activity-row--new {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.activity-row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.status-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.status-chip--issued {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+}
+
+.status-chip--paid {
+  background: color-mix(in srgb, #22c55e 15%, transparent);
+  color: #16a34a;
+}
+
+.status-chip--overdue {
+  background: color-mix(in srgb, #ef4444 15%, transparent);
+  color: #dc2626;
 }
 
 .activity-row span,

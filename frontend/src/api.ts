@@ -1,4 +1,4 @@
-import type { AuthUser, FeeType, StudentRecord } from './types';
+import type { AuthUser, BillRecord, FeeType, StudentRecord } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8081/api';
 
@@ -64,6 +64,11 @@ export async function createFeeType(payload: Partial<FeeType>, schoolCode: strin
 
 export async function updateFeeType(payload: Partial<FeeType> & { id: number }, schoolCode: string): Promise<void> {
   await req('/fee-types', { method: 'PUT', body: JSON.stringify(payload) }, schoolCode);
+}
+
+export async function fetchBills(schoolCode: string, limit = 10): Promise<BillRecord[]> {
+  const data = await req<{ data: BillRecord[] }>(`/bills?limit=${limit}`, {}, schoolCode);
+  return data.data;
 }
 
 export async function generateBill(payload: Record<string, unknown>, schoolCode: string): Promise<{ bill_id: number; bill_no: string }> {

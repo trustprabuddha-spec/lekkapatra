@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { createEmiPlan, createFeeType, fetchCurrentUser, fetchFeeTypes, fetchStudents, generateBill, invoicePdfUrl, login, logout, updateFeeType } from './api';
-import type { AuthUser, FeeType, StudentRecord } from './types';
+import { createEmiPlan, createFeeType, fetchBills, fetchCurrentUser, fetchFeeTypes, fetchStudents, generateBill, invoicePdfUrl, login, logout, updateFeeType } from './api';
+import type { AuthUser, BillRecord, FeeType, StudentRecord } from './types';
 
 type Screen = 'feeTypes' | 'generateBill' | 'emiPlans' | 'invoice';
 
@@ -424,6 +424,11 @@ function GenerateBillScreen({
   const [selectedFeeType, setSelectedFeeType] = useState('');
   const [extraAmount, setExtraAmount] = useState('');
   const [billNo, setBillNo] = useState('');
+  const [recentBills, setRecentBills] = useState<BillRecord[]>([]);
+
+  useEffect(() => {
+    void fetchBills(schoolCode).then(setRecentBills);
+  }, [schoolCode]);
 
   const selectedStudent = useMemo(
     () => students.find((student) => `${student.source}:${student.source_student_id}` === selectedKey) || null,
@@ -467,6 +472,7 @@ function GenerateBillScreen({
     }, schoolCode);
     setBillNo(res.bill_no);
     onCreated(res.bill_id);
+    void fetchBills(schoolCode).then(setRecentBills);
   }
 
   return (
@@ -580,16 +586,23 @@ function GenerateBillScreen({
       <aside className="stack">
         <section className="card activity-card">
           <CardTitle icon="history" title="Recent Bills" compact />
-          {billNo ? (
-            <div className="activity-row">
-              <div>
-                <strong>{billNo}</strong>
-                <span>{selectedStudent?.student_name || 'Student'} • {pickedFeeType?.name || 'Fee'}</span>
-              </div>
-              <strong>{formatCurrency(extraAmount ? Number(extraAmount) : Number(pickedFeeType?.default_amount || 0))}</strong>
-            </div>
+          {recentBills.length === 0 ? (
+            <p className="muted">No bills yet. Create one to see it here.</p>
           ) : (
-            <p className="muted">Create a bill to see it appear here and unlock invoice download.</p>
+            <div className="activity-list">
+              {recentBills.map((bill) => (
+                <div key={bill.id} className={`activity-row${bill.bill_no === billNo ? ' activity-row--new' : ''}`}>
+                  <div>
+                    <strong>{bill.bill_no}</strong>
+                    <span>{bill.student_name}</span>
+                  </div>
+                  <div className="activity-row-right">
+                    <strong>{formatCurrency(bill.total_amount)}</strong>
+                    <span className={`status-chip status-chip--${bill.status}`}>{bill.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </section>
       </aside>
