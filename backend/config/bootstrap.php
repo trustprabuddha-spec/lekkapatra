@@ -11,6 +11,7 @@ try {
     // Keep runtime working even if .env is absent.
 }
 
+// IST — applies to all date()/DateTime without an explicit zone (API, migrations, CLI via bootstrap).
 date_default_timezone_set('Asia/Kolkata');
 
 $isDebug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
