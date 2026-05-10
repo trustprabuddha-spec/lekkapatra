@@ -506,8 +506,15 @@ function GenerateBillScreen({
               </p>
             )}
           </div>
-          <label className="field">
-            <span>Active Enrolled Students</span>
+          <div className="field">
+            <span className="dropdown-label-row">
+              Active Enrolled Students
+              {studentSearch && (
+                <span className={enrolledStudents.length > 0 ? 'match-badge' : 'match-badge empty'}>
+                  {enrolledStudents.length} match{enrolledStudents.length !== 1 ? 'es' : ''}
+                </span>
+              )}
+            </span>
             <select value={enrolledKey} onChange={(event) => handleEnrolledChange(event.target.value)}>
               <option value="">Choose enrolled student...</option>
               {enrolledStudents.map((student) => (
@@ -516,9 +523,22 @@ function GenerateBillScreen({
                 </option>
               ))}
             </select>
-          </label>
-          <label className="field">
-            <span>Admissions Portal Students</span>
+            {studentSearch && enrolledStudents.length === 0 && admissionStudents.length > 0 && (
+              <p className="cross-dropdown-hint">
+                <span className="material-symbols-outlined">arrow_downward</span>
+                {admissionStudents.length} match{admissionStudents.length !== 1 ? 'es' : ''} found in Admissions Portal below
+              </p>
+            )}
+          </div>
+          <div className="field">
+            <span className="dropdown-label-row">
+              Admissions Portal Students
+              {studentSearch && (
+                <span className={admissionStudents.length > 0 ? 'match-badge' : 'match-badge empty'}>
+                  {admissionStudents.length} match{admissionStudents.length !== 1 ? 'es' : ''}
+                </span>
+              )}
+            </span>
             <select value={admissionsKey} onChange={(event) => handleAdmissionsChange(event.target.value)}>
               <option value="">Choose admissions student...</option>
               {admissionStudents.map((student) => (
@@ -527,7 +547,13 @@ function GenerateBillScreen({
                 </option>
               ))}
             </select>
-          </label>
+            {studentSearch && admissionStudents.length === 0 && enrolledStudents.length > 0 && (
+              <p className="cross-dropdown-hint up">
+                <span className="material-symbols-outlined">arrow_upward</span>
+                {enrolledStudents.length} match{enrolledStudents.length !== 1 ? 'es' : ''} found in Active Enrolled above
+              </p>
+            )}
+          </div>
           <label className="field">
             <span>Due Date</span>
             <input required type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />

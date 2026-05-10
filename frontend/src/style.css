@@ -689,6 +689,47 @@ a {
   width: 100%;
 }
 
+.dropdown-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.match-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--accent);
+  color: #fff;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.match-badge.empty {
+  background: var(--surface-variant);
+  color: var(--text-muted);
+}
+
+.cross-dropdown-hint {
+  margin: 4px 0 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cross-dropdown-hint .material-symbols-outlined {
+  font-size: 14px;
+}
+
 .search-result-count {
   margin: 0;
   font-size: 0.75rem;
