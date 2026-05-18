@@ -131,6 +131,12 @@ jobs:
           </FilesMatch>
           HTACCESS
 
+      - name: Report deploy package size
+        run: |
+          echo "Files to sync: $(find .deploy -type f | wc -l)"
+          du -sh .deploy
+          du -sh .deploy/vendor 2>/dev/null || true
+
       - name: Deploy to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
@@ -140,7 +146,15 @@ jobs:
           protocol: ${{ secrets.HOSTINGER_FTP_PROTOCOL || 'ftp' }}
           port: ${{ secrets.HOSTINGER_FTP_PORT || 21 }}
           local-dir: .deploy/
-          server-dir: ${{ secrets.HOSTINGER_FINANCE_FTP_DIR || 'public_html/' }}
+          # Site FTP users (u739175768.domain) are rooted at web root — use ./ not public_html/
+          server-dir: ${{ secrets.HOSTINGER_FINANCE_FTP_DIR || './' }}
+          log-level: minimal
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/uploads/**
+            **/.DS_Store
 
       - name: Run DB migrations
         run: |
