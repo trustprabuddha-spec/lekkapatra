@@ -140,7 +140,7 @@ jobs:
           protocol: ${{ secrets.HOSTINGER_FTP_PROTOCOL || 'ftp' }}
           port: ${{ secrets.HOSTINGER_FTP_PORT || 21 }}
           local-dir: .deploy/
-          server-dir: ${{ secrets.HOSTINGER_FINANCE_FTP_DIR || 'public_html' }}
+          server-dir: ${{ secrets.HOSTINGER_FINANCE_FTP_DIR || 'public_html/' }}
 
       - name: Run DB migrations
         run: |
