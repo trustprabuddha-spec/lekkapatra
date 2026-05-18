@@ -41,6 +41,25 @@ jobs:
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
       - name: Prepare deploy directory
+        env:
+          APP_DEBUG: ${{ secrets.APP_DEBUG || 'false' }}
+          MIGRATE_SECRET: ${{ secrets.MIGRATE_SECRET }}
+          FIN_DB_HOST: ${{ secrets.FIN_DB_HOST || 'localhost' }}
+          FIN_DB_NAME: ${{ secrets.FIN_DB_NAME }}
+          FIN_DB_USER: ${{ secrets.FIN_DB_USER }}
+          FIN_DB_PASS: ${{ secrets.FIN_DB_PASS }}
+          ANU_DB1_HOST: ${{ secrets.ANU_DB1_HOST || 'localhost' }}
+          ANU_DB1_NAME: ${{ secrets.ANU_DB1_NAME }}
+          ANU_DB1_USER: ${{ secrets.ANU_DB1_USER }}
+          ANU_DB1_PASS: ${{ secrets.ANU_DB1_PASS }}
+          ANU_DB2_HOST: ${{ secrets.ANU_DB2_HOST || 'localhost' }}
+          ANU_DB2_NAME: ${{ secrets.ANU_DB2_NAME }}
+          ANU_DB2_USER: ${{ secrets.ANU_DB2_USER }}
+          ANU_DB2_PASS: ${{ secrets.ANU_DB2_PASS }}
+          CENTRAL_DB_HOST: ${{ secrets.CENTRAL_DB_HOST || 'localhost' }}
+          CENTRAL_DB_NAME: ${{ secrets.CENTRAL_DB_NAME }}
+          CENTRAL_DB_USER: ${{ secrets.CENTRAL_DB_USER }}
+          CENTRAL_DB_PASS: ${{ secrets.CENTRAL_DB_PASS }}
         run: |
           mkdir -p .deploy/scripts
           cp -R frontend/dist/. .deploy/
@@ -51,33 +70,36 @@ jobs:
           cp -R backend/services .deploy/services
           cp -R backend/vendor .deploy/vendor
           cp backend/scripts/migrate-web.php .deploy/scripts/migrate-web.php
-          cat > .deploy/.env <<'ENV'
-          APP_ENV=production
-          APP_DEBUG=${{ secrets.APP_DEBUG || 'false' }}
-          APP_URL=https://shalalekka.prabudha.com
-          MIGRATE_SECRET=${{ secrets.MIGRATE_SECRET }}
-          ALLOWED_ORIGINS=https://shalalekka.prabudha.com,http://localhost:5177,http://127.0.0.1:5177
-
-          FIN_DB_HOST=${{ secrets.FIN_DB_HOST || 'localhost' }}
-          FIN_DB_NAME=${{ secrets.FIN_DB_NAME }}
-          FIN_DB_USER=${{ secrets.FIN_DB_USER }}
-          FIN_DB_PASS=${{ secrets.FIN_DB_PASS }}
-
-          ANU_DB1_HOST=${{ secrets.ANU_DB1_HOST || 'localhost' }}
-          ANU_DB1_NAME=${{ secrets.ANU_DB1_NAME }}
-          ANU_DB1_USER=${{ secrets.ANU_DB1_USER }}
-          ANU_DB1_PASS=${{ secrets.ANU_DB1_PASS }}
-
-          ANU_DB2_HOST=${{ secrets.ANU_DB2_HOST || 'localhost' }}
-          ANU_DB2_NAME=${{ secrets.ANU_DB2_NAME }}
-          ANU_DB2_USER=${{ secrets.ANU_DB2_USER }}
-          ANU_DB2_PASS=${{ secrets.ANU_DB2_PASS }}
-
-          CENTRAL_DB_HOST=${{ secrets.CENTRAL_DB_HOST || 'localhost' }}
-          CENTRAL_DB_NAME=${{ secrets.CENTRAL_DB_NAME }}
-          CENTRAL_DB_USER=${{ secrets.CENTRAL_DB_USER }}
-          CENTRAL_DB_PASS=${{ secrets.CENTRAL_DB_PASS }}
-          ENV
+          # Double-quote .env values so # in passwords is not treated as a comment by phpdotenv
+          write_env() {
+            local key="$1" val="$2"
+            val="${val//\\/\\\\}"
+            val="${val//\"/\\\"}"
+            printf '%s="%s"\n' "$key" "$val"
+          }
+          {
+            write_env APP_ENV production
+            write_env APP_DEBUG "${APP_DEBUG}"
+            write_env APP_URL https://shalalekka.prabudha.com
+            write_env MIGRATE_SECRET "${MIGRATE_SECRET}"
+            write_env ALLOWED_ORIGINS https://shalalekka.prabudha.com,http://localhost:5177,http://127.0.0.1:5177
+            write_env FIN_DB_HOST "${FIN_DB_HOST}"
+            write_env FIN_DB_NAME "${FIN_DB_NAME}"
+            write_env FIN_DB_USER "${FIN_DB_USER}"
+            write_env FIN_DB_PASS "${FIN_DB_PASS}"
+            write_env ANU_DB1_HOST "${ANU_DB1_HOST}"
+            write_env ANU_DB1_NAME "${ANU_DB1_NAME}"
+            write_env ANU_DB1_USER "${ANU_DB1_USER}"
+            write_env ANU_DB1_PASS "${ANU_DB1_PASS}"
+            write_env ANU_DB2_HOST "${ANU_DB2_HOST}"
+            write_env ANU_DB2_NAME "${ANU_DB2_NAME}"
+            write_env ANU_DB2_USER "${ANU_DB2_USER}"
+            write_env ANU_DB2_PASS "${ANU_DB2_PASS}"
+            write_env CENTRAL_DB_HOST "${CENTRAL_DB_HOST}"
+            write_env CENTRAL_DB_NAME "${CENTRAL_DB_NAME}"
+            write_env CENTRAL_DB_USER "${CENTRAL_DB_USER}"
+            write_env CENTRAL_DB_PASS "${CENTRAL_DB_PASS}"
+          } > .deploy/.env
           cat > .deploy/.htaccess <<'HTACCESS'
           Options -Indexes
           RewriteEngine On
